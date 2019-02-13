@@ -1,0 +1,19 @@
+{
+  "name": "midi_in_the_box",
+  "version": "1.0.0",
+  "description": "Music box playing midi files",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JochemVanIterson/MidiInTheBox.git"
+  },
+  "author": "Jochem van Iterson & Nika Nuijten",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JochemVanIterson/MidiInTheBox/issues"
+  },
+  "homepage": "https://github.com/JochemVanIterson/MidiInTheBox#readme"
+}
