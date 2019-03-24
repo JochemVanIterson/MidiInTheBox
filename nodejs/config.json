@@ -1,3 +1,5 @@
 {
-
+  "smoothingSize":50,
+  "midiFileFolder": "/home/pi/MidiInTheBox/nodejs/midiFiles/",
+  "soundFile": "/usr/share/sounds/sf2/FluidR3_GM.sf2"
 }

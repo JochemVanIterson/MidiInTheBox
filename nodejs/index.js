@@ -1,81 +1,30 @@
-//fluidsynth --audio-driver=alsa --gain=1 /usr/share/sounds/sf2/FluidR3_GM.sf2
+console.log("Running MidiInTheBox");
+
+console.log("(1/5) Config set");
 var config = require('./config.json');
 
+console.log("(2/5) Init midi ports");
+const { spawn } = require('child_process');
 var MidiPlayer = require('midi-player-js');
 var midi = require('midi');
-
-const { spawn } = require('child_process');
-
 var MidiOutput = new midi.output();
 var InitMidiPorts = [];
 var MidiPorts = [];
+initMidiPort();
+
+console.log("(3/5) Setup GPIO");
 const Gpio = require('onoff').Gpio;
 const button1 = new Gpio(22, 'in', 'both');
 const button2 = new Gpio(22, 'in', 'both');
-
 var buttonstate1 = false;
 var buttonstate2 = false;
 var armed = false;
 var lastTick = process.hrtime();
-
 var elapsedTimeDate;
-
 var elapsedTime;
-var elapsedTimeSize = 50;
+var elapsedTimeSize = config.smoothingSize;
 var elapsedTimeArray = [];
-
 var timeoutObj;
-
-var MidiFileFolder = "/home/pi/MidiInTheBox/nodejs/midiFiles/";
-
-var Player;
-
-// Select Output
-var countBefore = MidiOutput.getPortCount();
-for(var i =0; i< countBefore; i++){
-  var name = MidiOutput.getPortName(i);
-  InitMidiPorts.push(name);
-}
-
-const fluidsynth = spawn('/usr/bin/fluidsynth', ['--audio-driver=alsa', '--gain=1', '/usr/share/sounds/sf2/FluidR3_GM.sf2']);
-
-fluidsynth.stdout.on('data', (data) => {
-  // console.log(data.toString());
-});
-
-fluidsynth.stderr.on('data', (data) => {
-  // console.log(data.toString());
-});
-
-fluidsynth.on('exit', (code) => {
-  // console.log(`Child exited with code ${code}`);
-});
-
-while(countBefore==MidiOutput.getPortCount()){}
-
-var count = MidiOutput.getPortCount();
-for(var i =0; i< count; i++){
-  var name = MidiOutput.getPortName(i);
-  MidiPorts.push(name);
-}
-var diffArray = arr_diff(MidiPorts, InitMidiPorts);
-
-var count = MidiOutput.getPortCount();
-for(var i =0; i< count; i++){
-  var name = MidiOutput.getPortName(i);
-  if(name==diffArray[0]){
-    config.midiOutputID = i;
-    config.midiOutputName = name;
-  }
-
-}
-console.log(config);
-MidiOutput.openPort(config.midiOutputID);
-
-console.log("MIDI SETUP DONE");
-
-// Initialize player and register event handler
-initMidiPlayer()
 
 button1.watch((err, value) => {
   buttonstate1 = value;
@@ -86,11 +35,18 @@ button2.watch((err, value) => {
   checkDirection();
 });
 
+console.log("(4/5) Setup Midi player");
+var Player;
+initMidiPlayer();
+
+console.log("(5/5) Config file");
+console.log(config);
+console.log("\nSetup finished, Running...");
 function initMidiPlayer(){
   Player = new MidiPlayer.Player(function(event){});
 
   // Load a MIDI file
-  Player.loadFile(MidiFileFolder+'Mii-Channel-Theme.mid');
+  Player.loadFile(config.midiFileFolder+'Mii-Channel-Theme.mid');
   Player.on('midiEvent', function(event) {
     var type = event.name.toLowerCase().replace(/ /g, "_");
     if(type=="note_on"){
@@ -118,17 +74,50 @@ function checkDirection(){
     elapsedTimeArray = arr_push_circ(elapsedTimeArray, elapsedTimeSize, elapsedTime);    
 
     bpm = 4/arr_average(elapsedTimeArray);
-    console.log("bpm", bpm);
     Player.pause();
     Player.setTempo(bpm);
     Player.play();
     if(timeoutObj!=undefined) clearTimeout(timeoutObj);
     timeoutObj = setTimeout(() => {
       Player.setTempo(0);
-      console.log("bpm", 0);
-    }, 500);
+    }, 100);
     lastTick = process.hrtime();
   }
+}
+
+function initMidiPort(){
+  // Select Output
+  var countBefore = MidiOutput.getPortCount();
+  for(var i =0; i< countBefore; i++){
+    var name = MidiOutput.getPortName(i);
+    InitMidiPorts.push(name);
+  }
+
+  const fluidsynth = spawn('/usr/bin/fluidsynth', ['--audio-driver=alsa', '--gain=1', config.soundFile]);
+
+  fluidsynth.on('exit', (code) => {
+    console.log(`Child exited with code ${code}`);
+  });
+
+  while(countBefore==MidiOutput.getPortCount()){}
+
+  var count = MidiOutput.getPortCount();
+  for(var i =0; i< count; i++){
+    var name = MidiOutput.getPortName(i);
+    MidiPorts.push(name);
+  }
+  var diffArray = arr_diff(MidiPorts, InitMidiPorts);
+
+  var count = MidiOutput.getPortCount();
+  for(var i =0; i< count; i++){
+    var name = MidiOutput.getPortName(i);
+    if(name==diffArray[0]){
+      config.midiOutputID = i;
+      config.midiOutputName = name;
+    }
+
+  }
+  MidiOutput.openPort(config.midiOutputID);
 }
 
 function arr_diff (a1, a2) {
@@ -162,7 +151,6 @@ function arr_average(array){
   }
   return amount/array.length;
 }
-
 function arr_push_circ(array, maxSize, value){
   if(array.length<maxSize){
     array.push(value);
