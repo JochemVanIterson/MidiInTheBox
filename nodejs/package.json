@@ -15,5 +15,11 @@
   "bugs": {
     "url": "https://github.com/JochemVanIterson/MidiInTheBox/issues"
   },
-  "homepage": "https://github.com/JochemVanIterson/MidiInTheBox#readme"
+  "homepage": "https://github.com/JochemVanIterson/MidiInTheBox#readme",
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "midi": "^0.9.5",
+    "midi-player-js": "^2.0.5",
+    "onoff": "^4.1.1"
+  }
 }
