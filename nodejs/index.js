@@ -19,12 +19,6 @@ const button2 = new Gpio(22, 'in', 'both');
 var buttonstate1 = false;
 var buttonstate2 = false;
 var armed = false;
-var lastTick = process.hrtime();
-var elapsedTimeDate;
-var elapsedTime;
-var elapsedTimeSize = config.smoothingSize;
-var elapsedTimeArray = [];
-var timeoutObj;
 
 button1.watch((err, value) => {
   buttonstate1 = value;
@@ -37,6 +31,10 @@ button2.watch((err, value) => {
 
 console.log("(4/5) Setup Midi player");
 var Player;
+var midiEvents = [];
+var minTickSize;
+var tickIndex = -1;
+var midiFileIndex = 0;
 initMidiPlayer();
 
 console.log("(5/5) Config file");
@@ -46,15 +44,39 @@ function initMidiPlayer(){
   Player = new MidiPlayer.Player(function(event){});
 
   // Load a MIDI file
-  Player.loadFile(config.midiFileFolder+'Mii-Channel-Theme.mid');
+  tickIndex = -1;
+  midiEvents = [];
+  Player.loadFile(config.midiFileFolder+config.midiFiles[midiFileIndex]);
+  midiFileIndex++;
+  if(midiFileIndex>=config.midiFiles.length)midiFileIndex=0;
+   
+  let division = Player.division;
+  minTickSize = division/(config.minEventSize/4);
+  let unorderedMidiEvents = Player.getEvents();
+
+  unorderedMidiEvents.forEach(function(track){
+    track.forEach(function(event){
+      let eventTickID = Math.floor(event.tick/minTickSize);
+      if(midiEvents[eventTickID]===undefined)midiEvents[eventTickID]=[];
+      midiEvents[eventTickID].push(event);
+    });
+  });
+
   Player.on('midiEvent', function(event) {
+
+    if(event.name===undefined)event.name="";
     var type = event.name.toLowerCase().replace(/ /g, "_");
     if(type=="note_on"){
       MidiOutput.sendMessage([143+event.channel,event.noteNumber,event.velocity]);
     } else if(type=="note_off"){
       MidiOutput.sendMessage([127+event.channel,event.noteNumber,event.velocity]);
+    } else if(type=="program_change"){
+      MidiOutput.sendMessage([191+event.channel,event.value]);
+    } else if(type=="controller_change"){
+      MidiOutput.sendMessage([175+event.channel,event.value]);
+    } else if(type=="pitch_bend"){
+      MidiOutput.sendMessage([223+event.channel,event.value]);
     }
-    // console.log("event", event);
   });
   Player.on('endOfFile', function() {
     initMidiPlayer();
@@ -67,21 +89,16 @@ function checkDirection(){
     armed = true;
   } else if (armed){
     armed = false;
-    elapsedTimeDate = process.hrtime(lastTick);
-
-    
-    elapsedTime = elapsedTimeDate[0]+elapsedTimeDate[1]/1000000000;
-    elapsedTimeArray = arr_push_circ(elapsedTimeArray, elapsedTimeSize, elapsedTime);    
-
-    bpm = 4/arr_average(elapsedTimeArray);
-    Player.pause();
-    Player.setTempo(bpm);
-    Player.play();
-    if(timeoutObj!=undefined) clearTimeout(timeoutObj);
-    timeoutObj = setTimeout(() => {
-      Player.setTempo(0);
-    }, 100);
-    lastTick = process.hrtime();
+    tickIndex++;
+    if(midiEvents[tickIndex]!==undefined){
+      midiEvents[tickIndex].forEach(function(event){
+        Player.emitEvent(event);
+      });
+    }
+    if(tickIndex>midiEvents.length){
+      if(config.loop)tickIndex=-1;
+      else initMidiPlayer();
+    }
   }
 }
 
