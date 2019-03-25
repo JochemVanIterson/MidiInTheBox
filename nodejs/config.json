@@ -1,0 +1,11 @@
+{
+  "midiFileFolder": "/home/pi/MidiInTheBox/nodejs/midiFiles/",
+  "midiFiles": [
+    "Mii-Channel-Theme.mid",
+    "Miidi2.mid",
+    "Pachelbel4.mid"
+  ],
+  "loop": false,
+  "soundFile": "/usr/share/sounds/sf2/FluidR3_GM.sf2",
+  "minEventSize": 64
+}
