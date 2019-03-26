@@ -68,7 +68,7 @@ Shut down your Raspberry Pi.
 Solder three jumper wires to each rotary encoder pin.  
 **_WARNING:_** _Do not turn on the Pi without inserting the resistor. If you don't there will be a continuous 5v connection and you will blow up your Pi._  
 Connect the circuit:  
-![](Rotary_encoder_circuit_bb.png)
+![](assets/Rotary_encoder_circuit_bb.png)
 
 ### 5. Run the code
 (Re)start your Raspberry Pi. The program should run automatically. If it doesn't you may have to start it yourself.
