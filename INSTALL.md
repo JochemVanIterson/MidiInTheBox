@@ -19,7 +19,7 @@ Download [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/
 Connect the monitor and the keyboard. Connect the pi with an ethernet cable to your network.  
 _Insert the flashed sd card into the pi before connecting it to the power supply._
 
-#### Extend the filesystem
+#### Expand the filesystem
 ```BASH
 sudo raspi-config
 ```
