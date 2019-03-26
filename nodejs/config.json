@@ -5,7 +5,8 @@
     "Miidi2.mid",
     "Pachelbel4.mid"
   ],
-  "loop": false,
+  "midiFileIndex":0,
+  "loop": true,
   "soundFile": "/usr/share/sounds/sf2/FluidR3_GM.sf2",
   "minEventSize": 64
 }

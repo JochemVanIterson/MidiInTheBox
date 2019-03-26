@@ -34,7 +34,6 @@ var Player;
 var midiEvents = [];
 var minTickSize;
 var tickIndex = -1;
-var midiFileIndex = 0;
 initMidiPlayer();
 
 console.log("(5/5) Config file");
@@ -46,10 +45,10 @@ function initMidiPlayer(){
   // Load a MIDI file
   tickIndex = -1;
   midiEvents = [];
-  Player.loadFile(config.midiFileFolder+config.midiFiles[midiFileIndex]);
-  midiFileIndex++;
-  if(midiFileIndex>=config.midiFiles.length)midiFileIndex=0;
-   
+  Player.loadFile(config.midiFileFolder+config.midiFiles[config.midiFileIndex]);
+  config.midiFileIndex++;
+  if(config.midiFileIndex>=config.midiFiles.length)config.midiFileIndex=0;
+
   let division = Player.division;
   minTickSize = division/(config.minEventSize/4);
   let unorderedMidiEvents = Player.getEvents();
